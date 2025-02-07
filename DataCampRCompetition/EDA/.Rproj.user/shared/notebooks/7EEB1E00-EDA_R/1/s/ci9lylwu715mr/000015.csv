@@ -1,0 +1,6 @@
+"0","#| label: ""Creature Population"""
+"0",""
+"0","creature_populations <- dat %>%"
+"0","  group_by(CreatureType) %>%"
+"0","  summarise(species_total = sum(Number_of_Creatures)) %>%"
+"0","  ungroup()"

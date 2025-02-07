@@ -1,0 +1,189 @@
+---
+title: "EDA"
+format: html
+editor: visual
+---
+
+```{r}
+#| label: "Loading Libraries"
+#| warning: false
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(ggthemes)
+library(kableExtra)
+```
+
+```{r}
+#| label: "Reading Dataset"
+dat <- read.csv("magical_creatures_by_kingdom.csv")
+dat <- as_tibble(dat)
+```
+
+```{r}
+#| label: "Structure and Dimension"
+
+str(dat, strict.width = "wrap")
+# 36 observations and 3 variables
+
+```
+
+```{r}
+#| label: "What Does It Look Like"
+
+head(dat)
+```
+
+```{r}
+#| label: "Unique Answers"
+
+unique(dat$Kingdom)
+unique(dat$CreatureType)
+```
+
+```{r}
+#| label: "Creature Population"
+
+creature_populations <- dat %>%
+  group_by(CreatureType) %>%
+  summarise(species_total = sum(Number_of_Creatures)) %>%
+  ungroup()
+```
+
+```{r}
+#| label: "Kingdom Population"
+
+kingdom_population <- dat %>%
+  group_by(Kingdom) %>%
+  summarise(kingdom_total = sum(Number_of_Creatures)) %>%
+  ungroup()
+```
+
+```{r}
+#| label: "Percentage of Species by Kingdom"
+#| warning: false
+
+
+# intermediate code
+intermediate <- as_tibble(dat)
+intermediate <- intermediate %>%
+  left_join(kingdom_population, by=join_by(Kingdom))
+
+intermediate <- intermediate %>%
+  left_join(creature_populations, by=join_by(CreatureType))
+
+kingdom_demographics <- intermediate
+
+kingdom_demographics <- kingdom_demographics %>%
+  group_by(Kingdom, CreatureType) %>%
+  mutate(kingdom_percentage = Number_of_Creatures/kingdom_total * 100) %>%
+  ungroup()
+
+kingdom_demographics <- kingdom_demographics %>%
+  group_by(CreatureType, Kingdom) %>%
+  mutate(species_percentage = Number_of_Creatures/species_total * 100) %>%
+  ungroup()
+```
+
+```{r}
+#| label:  "Rounding kingdom_demographics"
+kingdom_demographics <- kingdom_demographics %>%
+  mutate(across(where(is.numeric), round, 1))
+
+head(kingdom_demographics)
+```
+
+```{r}
+#| label: "Pi Chart Creatures by Kingdom"
+#| fig-width: 10
+#| fig-height: 10
+
+ggplot(kingdom_demographics, aes(
+  x="",
+  y=species_percentage,
+  fill=Kingdom)
+  ) +
+  geom_col(color="black") +
+  coord_polar(theta ="y") +
+  geom_text(aes(label = species_percentage),
+            position = position_stack(vjust = 0.5)) +
+  facet_wrap(~CreatureType) +
+  theme_void()
+```
+
+```{r}
+#| label: "Pi Chart Kingdoms by Creatures"
+#| fig-width: 10
+#| fig-height: 10
+
+ggplot(kingdom_demographics, aes(
+  x="",
+  y = kingdom_percentage,
+  fill = CreatureType)
+  ) +
+  geom_col(color="black") +
+  coord_polar(theta ="y") +
+  geom_text(aes(label = kingdom_percentage),
+            position = position_stack(vjust = 0.5)) +
+  facet_wrap(~Kingdom) +
+  theme_void()
+
+```
+
+```{r}
+#| label: "Largest Creature Demographic by Kingdom"
+kingdom_demographics_arranged_kingdom <- kingdom_demographics %>%
+  arrange(desc(kingdom_demographics$kingdom_percentage)) %>%
+  group_by(Kingdom) %>%
+  select(c(Kingdom, CreatureType, kingdom_percentage)) %>%
+  slice_max(order_by = kingdom_percentage, n=1)
+
+kbl(kingdom_demographics_arranged_kingdom) %>%
+  kable_material()
+```
+
+```{r}
+#| label: "Largest Kingdom Demographic by Creature"
+kingdom_demographics_arranged_creature <- kingdom_demographics %>%
+  arrange(desc(kingdom_demographics$species_percentage)) %>%
+  group_by(CreatureType) %>%
+  select(c(CreatureType, Kingdom, species_percentage)) %>%
+  slice_max(order_by = species_percentage, n=1)
+
+kbl(kingdom_demographics_arranged_creature) %>%
+  kable_material()
+```
+
+```{r}
+#| label: "Pi Chart Total Population by Kingdom"
+#| fig-width: 10
+#| fig-height: 10
+
+ggplot(kingdom_population, aes(
+  x="",
+  y=kingdom_total,
+  fill=Kingdom)
+  ) +
+  geom_col(color="black") +
+  coord_polar(theta ="y") +
+  geom_text(aes(label = paste0(kingdom_total, "\n", Kingdom)),
+            position = position_stack(vjust = 0.5)) +
+  theme_void()
+```
+
+```{r}
+#| label: "Pi Chart Total Population by Species"
+#| fig-width: 10
+#| fig-height: 10
+
+ggplot(creature_populations, aes(
+  x="",
+  y=species_total,
+  fill=CreatureType)
+  ) +
+  geom_col(color="black") +
+  coord_polar(theta ="y") +
+  geom_text(aes(label = paste0(species_total,"\n",CreatureType)),
+            position = position_stack(vjust = 0.5)) +
+  theme_void()
+```

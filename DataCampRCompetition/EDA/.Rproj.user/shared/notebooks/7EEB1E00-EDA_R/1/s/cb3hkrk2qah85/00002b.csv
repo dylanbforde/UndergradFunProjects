@@ -1,0 +1,5 @@
+"0","#| label:  ""Rounding kingdom_demographics"""
+"0","kingdom_demographics <- kingdom_demographics %>%"
+"0","  mutate(across(where(is.numeric), round, 1))"
+"0",""
+"0","head(kingdom_demographics)"

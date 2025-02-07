@@ -1,0 +1,6 @@
+"0","#| label: ""Kingdom Population"""
+"0",""
+"0","kingdom_population <- dat %>%"
+"0","  group_by(Kingdom) %>%"
+"0","  summarise(kingdom_total = sum(Number_of_Creatures)) %>%"
+"0","  ungroup()"

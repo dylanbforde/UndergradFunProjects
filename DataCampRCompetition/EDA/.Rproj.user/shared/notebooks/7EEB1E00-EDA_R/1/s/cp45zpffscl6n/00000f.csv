@@ -1,0 +1,3 @@
+"0","#| label: ""Reading Dataset"""
+"0","dat <- read.csv(""magical_creatures_by_kingdom.csv"")"
+"0","dat <- as_tibble(dat)"
